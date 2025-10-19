@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Entrar — INST·ALACANT</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  
+<header data-component="SiteHeader" class="site-header">
+  <div class="site-header__inner">
+    <a href="feed.html" data-nav class="logo">INST·ALACANT</a>
+    <nav data-component="SiteNavBar" class="nav">
+      <a href="feed.html" data-nav aria-current="page">Inicio</a>
+      <a href="explorar.html" data-nav>Explorar</a>
+      <a href="perfil.html" data-nav>Perfil</a>
+      <a href="login.html" data-nav>Entrar</a>
+    </nav>
+  </div>
+</header>
+
+  <main class="container" data-outlet>
+    <section data-component="Auth" class="grid-3">
+      <form class="card" action="#" method="post">
+        <h1>Entrar</h1>
+        <label class="mt-2">Email
+          <input class="input" type="email" placeholder="tu@email">
+        </label>
+        <label>Contraseña
+          <input class="input" type="password" placeholder="••••••••">
+        </label>
+        <button class="button mt-2" type="submit">Acceder</button>
+      </form>
+
+      <form class="card" action="#" method="post">
+        <h2>Crear cuenta</h2>
+        <label class="mt-2">Usuario
+          <input class="input" type="text" placeholder="@usuario">
+        </label>
+        <label>Email
+          <input class="input" type="email" placeholder="tu@email">
+        </label>
+        <label>Contraseña
+          <input class="input" type="password" placeholder="••••••••">
+        </label>
+        <button class="button mt-2" type="submit">Registrarme</button>
+      </form>
+
+      <div class="card">
+        <h2>Info</h2>
+        <p class="muted">Este es un prototipo HTML/CSS sin JavaScript. Los botones no envían nada.</p>
+      </div>
+    </section>
+  </main>
+  
+<footer data-component="SiteFooter" class="site-footer">
+  © 2025 — Inst·alacant (Prototipo HTML/CSS)
+</footer>
+
+</body>
+</html>

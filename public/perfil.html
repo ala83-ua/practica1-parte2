@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Perfil — INST·ALACANT</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  
+<header data-component="SiteHeader" class="site-header">
+  <div class="site-header__inner">
+    <a href="feed.html" data-nav class="logo">INST·ALACANT</a>
+    <nav data-component="SiteNavBar" class="nav">
+      <a href="feed.html" data-nav aria-current="page">Inicio</a>
+      <a href="explorar.html" data-nav>Explorar</a>
+      <a href="perfil.html" data-nav>Perfil</a>
+      <a href="login.html" data-nav>Entrar</a>
+    </nav>
+  </div>
+</header>
+
+  <main class="container" data-outlet>
+    <section data-component="UserProfile" class="profile">
+      <div class="profile__header">
+        <img class="profile__avatar" src="img/avatar-2.png" alt="Avatar de Max" />
+        <div>
+          <h1>@max</h1>
+          <div class="muted">Fotografía • Misterio • Viajes en el tiempo</div>
+          <div class="mt-2">
+            <button class="button">Editar perfil</button>
+            <button class="button--ghost">Seguir</button>
+          </div>
+        </div>
+      </div>
+
+      <section data-component="UserStats" class="grid-3">
+        <div class="card"><strong>Publicaciones</strong><div class="mt-2">24</div></div>
+        <div class="card"><strong>Seguidores</strong><div class="mt-2">301</div></div>
+        <div class="card"><strong>Siguiendo</strong><div class="mt-2">180</div></div>
+      </section>
+
+      <section data-component="UserPosts" class="post-list">
+        <article data-component="PostCard" class="post-card">
+          <header class="post-card__header">
+            <img class="post-card__avatar" src="img/avatar-2.png" alt="Avatar de Max" />
+            <div>
+              <div class="post-card__user">Max</div>
+              <div class="post-card__meta">la semana pasada</div>
+            </div>
+          </header>
+          <img class="post-card__image" src="img/photo-2.jpg" alt="Foto" />
+          <div class="post-card__body">
+            <p>Probando revelado a color.</p>
+          </div>
+          <div class="post-card__actions">
+            <button class="button--ghost">❤️</button>
+            <button class="button--ghost">💬</button>
+            <button class="button--ghost">✏️ Editar</button>
+            <button class="button--ghost">🗑️ Eliminar</button>
+          </div>
+        </article>
+      </section>
+    </section>
+  </main>
+  
+<footer data-component="SiteFooter" class="site-footer">
+  © 2025 — Inst·alacant (Prototipo HTML/CSS)
+</footer>
+
+</body>
+</html>

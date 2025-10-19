@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Explorar — INST·ALACANT</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  
+<header data-component="SiteHeader" class="site-header">
+  <div class="site-header__inner">
+    <a href="feed.html" data-nav class="logo">INST·ALACANT</a>
+    <nav data-component="SiteNavBar" class="nav">
+      <a href="feed.html" data-nav aria-current="page">Inicio</a>
+      <a href="explorar.html" data-nav>Explorar</a>
+      <a href="perfil.html" data-nav>Perfil</a>
+      <a href="login.html" data-nav>Entrar</a>
+    </nav>
+  </div>
+</header>
+
+  <main class="container" data-outlet>
+    <section data-component="ExploreToolbar" class="toolbar">
+      <input class="input" type="search" placeholder="Busca por usuario o hashtag" aria-label="Buscar" />
+      <select class="select" aria-label="Filtrar por categoría">
+        <option>Todo</option>
+        <option>Fotografía</option>
+        <option>Arte</option>
+        <option>Viajes</option>
+      </select>
+      <select class="select" aria-label="Ordenar">
+        <option>Recientes</option>
+        <option>Populares</option>
+      </select>
+    </section>
+
+    <section data-component="ExploreGrid" class="grid-3">
+      <article data-component="PostCard" class="post-card">
+        <header class="post-card__header">
+          <img class="post-card__avatar" src="img/avatar-1.png" alt="Avatar" />
+          <div>
+            <div class="post-card__user">@chloe</div>
+            <div class="post-card__meta">#viajes #costa</div>
+          </div>
+        </header>
+        <img class="post-card__image" src="img/photo-3.jpg" alt="Playa" />
+        <div class="post-card__body">
+          <p>¿Quién se apunta a una road trip?</p>
+        </div>
+        <div class="post-card__actions">
+          <button class="button--ghost">❤️</button>
+          <button class="button--ghost">💬</button>
+        </div>
+      </article>
+
+      <div class="card card--ghost" aria-hidden="true">Más resultados…</div>
+      <div class="card card--ghost" aria-hidden="true">Más resultados…</div>
+    </section>
+  </main>
+  
+<footer data-component="SiteFooter" class="site-footer">
+  © 2025 — Inst·alacant (Prototipo HTML/CSS)
+</footer>
+
+</body>
+</html>
