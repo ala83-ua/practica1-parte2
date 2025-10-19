@@ -1,0 +1,71 @@
+# =========================
+# Node / Frontend tooling
+# =========================
+node_modules/
+dist/
+out/
+.cache/
+.vite/
+.eslintcache
+*.pid
+*.pid.lock
+
+# pnpm / yarn
+.pnpm-debug.log*
+yarn.lock
+yarn-error.log
+pnpm-lock.yaml
+npm-debug.log*
+npm-error.log*
+*.log
+
+# =========================
+# Environment files
+# =========================
+.env
+.env.*.local
+
+
+# =========================
+# PocketBase
+# =========================
+# Datos locales y migraciones (no deben subirse)
+pocketbase/pb_data/
+pocketbase/pb_migrations/
+
+# Paquetes descargados
+pocketbase/*.zip
+pocketbase/*.tar
+pocketbase/*.tar.gz
+
+# =========================
+# Tests / Cobertura
+# =========================
+coverage/
+.vscode-test/
+reports/
+.junit/
+*.lcov
+
+# =========================
+# SO / Archivos temporales
+# =========================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+# Linux/Unix
+*~
+*.swp
+*.swo
+*.tmp
+tmp/
+temp/
+
+# =========================
+# Generados por herramientas
+# =========================
+*.coverage
+*.tgz
+*.orig
+*.rej

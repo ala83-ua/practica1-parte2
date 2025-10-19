@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "pb": "cd pocketbase && ./pocketbase serve",
+    "dev": "npx serve public -p 5173"
+  }
+}
