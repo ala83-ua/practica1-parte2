@@ -5,58 +5,92 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Entrar — INST·ALACANT</title>
   <link rel="stylesheet" href="styles.css" />
-</head>
+</head> 
 <body>
-  
 <header data-component="SiteHeader" class="site-header">
   <div class="site-header__inner">
     <a href="feed.html" data-nav class="logo">INST·ALACANT</a>
     <nav data-component="SiteNavBar" class="nav">
-      <a href="feed.html" data-nav aria-current="page">Inicio</a>
+      <a href="feed.html" data-nav>Inicio</a>
       <a href="explorar.html" data-nav>Explorar</a>
       <a href="perfil.html" data-nav>Perfil</a>
-      <a href="login.html" data-nav>Entrar</a>
+      <a href="login.html" data-nav aria-current="page">Entrar</a>
     </nav>
   </div>
 </header>
 
-  <main class="container" data-outlet>
-    <section data-component="Auth" class="grid-3">
-      <form class="card" action="#" method="post">
-        <h1>Entrar</h1>
-        <label class="mt-2">Email
-          <input class="input" type="email" placeholder="tu@email">
-        </label>
-        <label>Contraseña
-          <input class="input" type="password" placeholder="••••••••">
-        </label>
-        <button class="button mt-2" type="submit">Acceder</button>
-      </form>
+<main class="container" data-outlet>
+  <section data-component="Auth" class="grid-3">
+    <!-- LOGIN -->
+    <form id="formLogin" class="card" action="#" method="post">
+      <h1>Entrar</h1>
+      <label class="mt-2">Email
+        <input id="email" class="input" type="email" placeholder="tu@email" required>
+      </label>
+      <label>Contraseña
+        <input id="password" class="input" type="password" placeholder="••••••••" required>
+      </label>
+      <button id="btnLogin" class="button mt-2" type="submit">Acceder</button>
+      <p class="muted mt-1">Sesión: <span id="whoami">Invitado</span></p>
+    </form>
 
-      <form class="card" action="#" method="post">
-        <h2>Crear cuenta</h2>
-        <label class="mt-2">Usuario
-          <input class="input" type="text" placeholder="@usuario">
-        </label>
-        <label>Email
-          <input class="input" type="email" placeholder="tu@email">
-        </label>
-        <label>Contraseña
-          <input class="input" type="password" placeholder="••••••••">
-        </label>
-        <button class="button mt-2" type="submit">Registrarme</button>
-      </form>
+    <!-- REGISTRO -->
+    <form id="formReg" class="card" action="#" method="post">
+      <h2>Crear cuenta</h2>
+      <label class="mt-2">Usuario
+        <input id="userReg" class="input" type="text" placeholder="@usuario" required>
+      </label>
+      <label>Email
+        <input id="emailReg" class="input" type="email" placeholder="tu@email" required>
+      </label>
+      <label>Contraseña
+        <input id="pwdReg" class="input" type="password" placeholder="••••••••" required>
+      </label>
+      <label>Repite contraseña
+        <input id="pwd2Reg" class="input" type="password" placeholder="••••••••" required>
+      </label>
+      <button id="btnReg" class="button mt-2" type="submit">Registrarme</button>
+    </form>
 
-      <div class="card">
-        <h2>Info</h2>
-        <p class="muted">Este es un prototipo HTML/CSS sin JavaScript. Los botones no envían nada.</p>
-      </div>
-    </section>
-  </main>
-  
+    <div class="card">
+      <h2>Info</h2>
+      <p class="muted">Esta vista ahora llama a tu backend PocketBase con el API JS.</p>
+    </div>
+  </section>
+</main>
+
 <footer data-component="SiteFooter" class="site-footer">
-  © 2025 — Inst·alacant (Prototipo HTML/CSS)
+  © 2025 — Inst·alacant
 </footer>
 
+<!-- 🔗 ENLACE A LOS SERVICES -->
+<script type="module">
+  import { login, register, currentUser, isLogged } from '../js/services/auth.service.js';
+
+  const $ = s => document.querySelector(s);
+
+  // Mostrar estado sesión
+  const who = $('#whoami');
+  if (who) who.textContent = isLogged() ? (currentUser()?.email || '—') : 'Invitado';
+
+  // Evitar submit nativo y usar RPC
+  $('#formLogin')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await login($('#email').value, $('#password').value);
+    // Redirige al feed
+    window.location.href = './feed.html';
+  });
+
+  $('#formReg')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await register({
+      email: $('#emailReg').value,
+      username: $('#userReg').value,
+      password: $('#pwdReg').value,
+      passwordConfirm: $('#pwd2Reg').value
+    });
+    alert('Cuenta creada. Ahora inicia sesión.');
+  });
+</script>
 </body>
 </html>

@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  
 <header data-component="SiteHeader" class="site-header">
   <div class="site-header__inner">
     <a href="feed.html" data-nav class="logo">INST·ALACANT</a>
@@ -20,68 +19,89 @@
   </div>
 </header>
 
-  <main class="container" data-outlet>
-    <section data-component="PostComposer" class="card">
-      <h1 class="mt-0">Inicio</h1>
-      <div class="toolbar mt-2">
-        <input class="input" type="text" placeholder="¿Qué estás pensando, Max?" aria-label="Componer publicación" />
-        <button class="button">Publicar</button>
-      </div>
-    </section>
+<main class="container" data-outlet>
+  <!-- Composer -->
+  <section data-component="PostComposer" class="card">
+    <h1 class="mt-0">Inicio</h1>
+    <div class="toolbar mt-2">
+      <input id="composeInput" class="input" type="text" placeholder="¿Qué estás pensando?" aria-label="Componer publicación" />
+      <!-- input de imagen opcional (múltiple) -->
+      <input id="composeFile" class="input" type="file" accept="image/*" multiple style="max-width:260px">
+      <button id="publishBtn" class="button">Publicar</button>
+    </div>
+    <p class="muted mt-1">Sesión: <span id="whoami">Invitado</span></p>
+  </section>
 
-    <section data-component="PostList" class="post-list mt-4">
-      <article data-component="PostCard" class="post-card">
-        <header class="post-card__header">
-          <img class="post-card__avatar" src="img/avatar-1.png" alt="Avatar de Chloe" />
-          <div>
-            <div class="post-card__user">Chloe Price</div>
-            <div class="post-card__meta">hoy · San Vicente del Raspeig</div>
-          </div>
-        </header>
-        <img class="post-card__image" src="img/photo-1.jpg" alt="Foto de la publicación" />
-        <div class="post-card__body">
-          <p>La luz del de Alicante hace que todo parezca un fotograma de cine.</p>
-        </div>
-        <div class="post-card__actions">
-          <button class="button--ghost">❤️ Me gusta</button>
-          <button class="button--ghost">💬 Comentar</button>
-          <button class="button--ghost">↗️ Compartir</button>
-        </div>
-        <div class="comment-list">
-          <div class="comment">
-            <img class="comment__avatar" src="img/avatar-2.png" alt="Avatar de Max" />
-            <div class="comment__bubble">
-              <div class="comment__user">Max</div>
-              <div class="comment__text">¡Y aún mejor si lo capturas en RAW! 📷</div>
-            </div>
-          </div>
-        </div>
-      </article>
+  <!-- Lista dinámica -->
+  <section data-component="PostList" class="post-list mt-4" id="feedList"></section>
+</main>
 
-      <article data-component="PostCard" class="post-card">
-        <header class="post-card__header">
-          <img class="post-card__avatar" src="img/avatar-2.png" alt="Avatar de Max" />
-          <div>
-            <div class="post-card__user">Max</div>
-            <div class="post-card__meta">ayer · Alicante</div>
-          </div>
-        </header>
-        <img class="post-card__image" src="img/photo-2.jpg" alt="Foto de la publicación" />
-        <div class="post-card__body">
-          <p>Último día de playa ✨</p>
-        </div>
-        <div class="post-card__actions">
-          <button class="button--ghost">❤️ Me gusta</button>
-          <button class="button--ghost">💬 Comentar</button>
-          <button class="button--ghost">↗️ Compartir</button>
-        </div>
-      </article>
-    </section>
-  </main>
-  
 <footer data-component="SiteFooter" class="site-footer">
-  © 2025 — Inst·alacant (Prototipo HTML/CSS)
+  © 2025 — Inst·alacant
 </footer>
 
+<!-- 🔗 ENLACE A LOS SERVICES -->
+<script type="module">
+  import { isLogged, currentUser } from '../js/services/auth.service.js';
+  import { crearPublicacion, listarPublicaciones, eliminarPublicacion } from '../js/services/publicaciones.service.js';
+
+  const $ = s => document.querySelector(s);
+  const list = $('#feedList');
+  const base = 'http://127.0.0.1:8090';
+
+  const fileUrl = (item, filename) =>
+    `${base}/api/files/${item.collectionId}/${item.id}/${filename}`;
+
+  // Estado sesión
+  const who = $('#whoami');
+  if (who) who.textContent = isLogged() ? (currentUser()?.email || '—') : 'Invitado';
+
+  // Pintar feed
+  async function render(page = 1) {
+    const res = await listarPublicaciones({ page, perPage: 10, sort: '-created' });
+    list.innerHTML = res.items.map(p => {
+      const imgs = (p.imagenes || []).map(name =>
+        `<img class="post-card__image" src="${fileUrl(p, name)}" alt="" />`
+      ).join('');
+      return `
+        <article data-component="PostCard" class="post-card">
+          <header class="post-card__header">
+            <div>
+              <div class="post-card__user">${p.usuario ?? 'Usuario'}</div>
+              <div class="post-card__meta">${new Date(p.created).toLocaleString()}</div>
+            </div>
+          </header>
+          ${imgs}
+          <div class="post-card__body"><p>${p.contenido ?? ''}</p></div>
+          <div class="post-card__actions">
+            ${isLogged() ? `<button class="button--ghost del" data-id="${p.id}">🗑️ Eliminar</button>` : ``}
+          </div>
+        </article>`;
+    }).join('');
+
+    // Bind eliminar
+    list.querySelectorAll('.del').forEach(b => {
+      b.addEventListener('click', async (e) => {
+        await eliminarPublicacion(e.target.dataset.id);
+        render();
+      });
+    });
+  }
+
+  // Publicar
+  $('#publishBtn')?.addEventListener('click', async () => {
+    if (!isLogged()) return alert('Inicia sesión');
+    const contenido = $('#composeInput').value.trim();
+    const files = Array.from($('#composeFile')?.files || []);
+    if (!contenido && files.length === 0) return;
+
+    await crearPublicacion({ contenido, archivos: files });
+    $('#composeInput').value = '';
+    if ($('#composeFile')) $('#composeFile').value = '';
+    render();
+  });
+
+  render();
+</script>
 </body>
 </html>
