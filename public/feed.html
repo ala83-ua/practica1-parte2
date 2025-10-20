@@ -41,29 +41,37 @@
 <footer class="site-footer">© 2025 — Inst·alacant</footer>
 
 <script type="module">
-  import { isLogged, currentUser } from '../js/services/auth.service.js';
-  import { crearPublicacion, listarPublicaciones, eliminarPublicacion } from '../js/services/publicaciones.service.js';
+  import { isLogged, currentUser } from './js/services/auth.service.js';
+  import { crearPublicacion, listarPublicaciones, eliminarPublicacion } from './js/services/publicaciones.service.js';
 
   const $ = s => document.querySelector(s);
   const list = $('#feedList');
   const input = $('#composeInput');
+  const fileInput = $('#composeFile');
   const BASE = 'http://127.0.0.1:8090';
 
   const fileUrl = (item, filename) => `${BASE}/api/files/${item.collectionId}/${item.id}/${filename}`;
   const userAvatarUrl = (u) => `${BASE}/api/files/_pb_users_auth_/${u.id}/${u.avatar}`;
 
-  // Sesión + placeholder personalizado
+  // Helpers para tolerar nombres distintos en tu schema
+  const getTexto = (p) => p.comentario ?? p.Comentario ?? p.texto ?? p.content ?? '';
+  const getArchivos = (p) => {
+    if (Array.isArray(p.imagenes) && p.imagenes.length) return p.imagenes;
+    if (p.imagen) return [p.imagen];
+    return [];
+  };
+
+  // Sesión + placeholder
   const u = currentUser();
   $('#whoami').textContent = isLogged() ? (u?.email || '—') : 'Invitado';
   if (isLogged() && input) {
-    const nombre = u?.username || u?.email?.split('@')[0] || 'usuario';
+    const nombre = u?.username || (u?.email ? u.email.split('@')[0] : 'usuario');
     input.placeholder = `¿Qué estás pensando, ${nombre}?`;
   }
 
   // Preview imágenes
-  const fileInput = $('#composeFile');
-  $('#addPhotosBtn').addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', () => {
+  $('#addPhotosBtn')?.addEventListener('click', () => fileInput.click());
+  fileInput?.addEventListener('change', () => {
     const preview = $('#preview'); preview.innerHTML = '';
     Array.from(fileInput.files || []).forEach(f => {
       const url = URL.createObjectURL(f);
@@ -74,16 +82,21 @@
     });
   });
 
-  async function render(page=1) {
+  // Listar publicaciones
+  async function render(page = 1) {
     try {
+      // Asegúrate de que en tu service se usa expand:'id_usuario'
       const res = await listarPublicaciones({ page, perPage: 10, sort: '-created' });
       list.innerHTML = res.items.map(p => {
-        const imgs = (p.imagenes || []).map(name =>
+        const imgs = getArchivos(p).map(name =>
           `<img class="post-card__image" src="${fileUrl(p, name)}" alt="">`
         ).join('');
-        const autor = p.expand?.id_usuario;
+
+        const autor = p.expand?.id_usuario; // <— tu relación
         const avatar = autor?.avatar ? userAvatarUrl(autor) : 'img/avatar-1.png';
         const nombre = autor?.username || autor?.email || 'Usuario';
+        const texto = getTexto(p);
+
         return `
           <article class="post-card">
             <header class="post-card__header">
@@ -94,13 +107,14 @@
               </div>
             </header>
             ${imgs}
-            <div class="post-card__body"><p>${p.comentario ?? ''}</p></div>
+            <div class="post-card__body"><p>${texto}</p></div>
             <div class="post-card__actions">
               ${isLogged() ? `<button class="button--ghost del" data-id="${p.id}">🗑️ Eliminar</button>` : ``}
             </div>
           </article>`;
       }).join('');
 
+      // acciones
       list.querySelectorAll('.del').forEach(b => {
         b.addEventListener('click', async (e) => {
           await eliminarPublicacion(e.target.dataset.id);
@@ -115,9 +129,9 @@
   }
 
   // Publicar
-  $('#publishBtn').addEventListener('click', async () => {
+  $('#publishBtn')?.addEventListener('click', async () => {
     if (!isLogged()) return alert('Inicia sesión');
-    const comentario = $('#composeInput').value.trim();
+    const comentario = $('#composeInput').value.trim(); // este es el nombre esperado por tu schema
     const archivos = Array.from(fileInput.files || []);
     if (!comentario && archivos.length === 0) return;
 
@@ -127,7 +141,7 @@
       $('#composeInput').value = '';
       fileInput.value = '';
       $('#preview').innerHTML = '';
-      render();
+      render(); // refresca la lista
     } catch (err) {
       console.error(err);
       alert('No se pudo publicar.');
@@ -135,6 +149,9 @@
       $('#publishBtn').disabled = false;
     }
   });
+
+  render();
+</script>
 
   render();
 </script>
