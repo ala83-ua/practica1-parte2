@@ -7,66 +7,70 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  
-<header data-component="SiteHeader" class="site-header">
+<header class="site-header">
   <div class="site-header__inner">
-    <a href="feed.html" data-nav class="logo">INST·ALACANT</a>
-    <nav data-component="SiteNavBar" class="nav">
-      <a href="feed.html" data-nav aria-current="page">Inicio</a>
-      <a href="explorar.html" data-nav>Explorar</a>
-      <a href="perfil.html" data-nav>Perfil</a>
-      <a href="login.html" data-nav>Entrar</a>
+    <a href="feed.html" class="logo">INST·ALACANT</a>
+    <nav class="nav">
+      <a href="feed.html">Inicio</a>
+      <a href="explorar.html">Explorar</a>
+      <a href="perfil.html" aria-current="page">Perfil</a>
+      <a href="login.html">Entrar</a>
     </nav>
   </div>
 </header>
 
-  <main class="container" data-outlet>
-    <section data-component="UserProfile" class="profile">
-      <div class="profile__header">
-        <img class="profile__avatar" src="img/avatar-2.png" alt="Avatar de Max" />
-        <div>
-          <h1>@max</h1>
-          <div class="muted">Fotografía • Misterio • Viajes en el tiempo</div>
-          <div class="mt-2">
-            <button class="button">Editar perfil</button>
-            <button class="button--ghost">Seguir</button>
-          </div>
-        </div>
-      </div>
+<main class="container">
+  <section class="card">
+    <h1>Mi perfil</h1>
+    <img id="avatarImg" alt="Avatar" style="width:96px;height:96px;border-radius:999px;object-fit:cover">
+    <div class="mt-2">
+      <input id="avatarInput" type="file" accept="image/*" style="display:none">
+      <button id="avatarBtn" class="button--ghost" type="button">Cambiar avatar</button>
+    </div>
+    <p class="muted mt-1">Email: <span id="emailOut"></span></p>
+    <p class="muted">ID: <span id="idOut"></span></p>
+    <p id="perfilErr" style="color:#c00;display:none"></p>
+  </section>
+</main>
 
-      <section data-component="UserStats" class="grid-3">
-        <div class="card"><strong>Publicaciones</strong><div class="mt-2">24</div></div>
-        <div class="card"><strong>Seguidores</strong><div class="mt-2">301</div></div>
-        <div class="card"><strong>Siguiendo</strong><div class="mt-2">180</div></div>
-      </section>
+<footer class="site-footer">© 2025 — Inst·alacant</footer>
 
-      <section data-component="UserPosts" class="post-list">
-        <article data-component="PostCard" class="post-card">
-          <header class="post-card__header">
-            <img class="post-card__avatar" src="img/avatar-2.png" alt="Avatar de Max" />
-            <div>
-              <div class="post-card__user">Max</div>
-              <div class="post-card__meta">la semana pasada</div>
-            </div>
-          </header>
-          <img class="post-card__image" src="img/photo-2.jpg" alt="Foto" />
-          <div class="post-card__body">
-            <p>Probando revelado a color.</p>
-          </div>
-          <div class="post-card__actions">
-            <button class="button--ghost">❤️</button>
-            <button class="button--ghost">💬</button>
-            <button class="button--ghost">✏️ Editar</button>
-            <button class="button--ghost">🗑️ Eliminar</button>
-          </div>
-        </article>
-      </section>
-    </section>
-  </main>
-  
-<footer data-component="SiteFooter" class="site-footer">
-  © 2025 — Inst·alacant (Prototipo HTML/CSS)
-</footer>
+<script type="module">
+  import { currentUser, isLogged } from '../js/services/auth.service.js';
+  import { actualizarUsuarioActual } from '../js/services/users.service.js';
 
+  const BASE = 'http://127.0.0.1:8090';
+  const $ = s => document.querySelector(s);
+  const u = currentUser();
+
+  // Datos
+  $('#emailOut').textContent = u?.email ?? 'Invitado';
+  $('#idOut').textContent = u?.id ?? '-';
+
+  // Avatar actual o placeholder
+  const avatarEl = $('#avatarImg');
+  if (isLogged() && u?.avatar) {
+    avatarEl.src = `${BASE}/api/files/_pb_users_auth_/${u.id}/${u.avatar}`;
+  } else {
+    avatarEl.src = 'img/avatar-1.png';
+  }
+
+  // Cambiar avatar
+  $('#avatarBtn').addEventListener('click', () => $('#avatarInput').click());
+  $('#avatarInput').addEventListener('change', async () => {
+    const file = $('#avatarInput').files?.[0];
+    if (!file) return;
+    try {
+      await actualizarUsuarioActual({ avatarFile: file });
+      // refresco (cache-busting)
+      avatarEl.src = `${BASE}/api/files/_pb_users_auth_/${u.id}/${file.name}?v=${Date.now()}`;
+      alert('Avatar actualizado');
+    } catch (e) {
+      console.error(e);
+      $('#perfilErr').textContent = 'No se pudo actualizar el avatar.';
+      $('#perfilErr').style.display = 'block';
+    }
+  });
+</script>
 </body>
 </html>

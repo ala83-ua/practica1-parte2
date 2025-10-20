@@ -7,98 +7,129 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<header data-component="SiteHeader" class="site-header">
+<header class="site-header">
   <div class="site-header__inner">
-    <a href="feed.html" data-nav class="logo">INST·ALACANT</a>
-    <nav data-component="SiteNavBar" class="nav">
-      <a href="feed.html" data-nav aria-current="page">Inicio</a>
-      <a href="explorar.html" data-nav>Explorar</a>
-      <a href="perfil.html" data-nav>Perfil</a>
-      <a href="login.html" data-nav>Entrar</a>
+    <a href="feed.html" class="logo">INST·ALACANT</a>
+    <nav class="nav">
+      <a href="feed.html" aria-current="page">Inicio</a>
+      <a href="explorar.html">Explorar</a>
+      <a href="perfil.html">Perfil</a>
+      <a href="login.html">Entrar</a>
     </nav>
   </div>
 </header>
 
-<main class="container" data-outlet>
+<main class="container">
   <!-- Composer -->
-  <section data-component="PostComposer" class="card">
+  <section class="card">
     <h1 class="mt-0">Inicio</h1>
     <div class="toolbar mt-2">
+      <!-- Campo de texto: mapea al campo "comentario" -->
       <input id="composeInput" class="input" type="text" placeholder="¿Qué estás pensando?" aria-label="Componer publicación" />
-      <!-- input de imagen opcional (múltiple) -->
-      <input id="composeFile" class="input" type="file" accept="image/*" multiple style="max-width:260px">
+      <!-- Fotos múltiples -->
+      <input id="composeFile" type="file" accept="image/*" multiple style="display:none">
+      <button id="addPhotosBtn" class="button--ghost" type="button">📷 Añadir fotos</button>
       <button id="publishBtn" class="button">Publicar</button>
     </div>
+    <div id="preview" class="mt-2" style="display:flex;gap:.5rem;flex-wrap:wrap"></div>
     <p class="muted mt-1">Sesión: <span id="whoami">Invitado</span></p>
+    <p id="feedErr" style="color:#c00;display:none"></p>
   </section>
 
   <!-- Lista dinámica -->
-  <section data-component="PostList" class="post-list mt-4" id="feedList"></section>
+  <section class="post-list mt-4" id="feedList"></section>
 </main>
 
-<footer data-component="SiteFooter" class="site-footer">
-  © 2025 — Inst·alacant
-</footer>
+<footer class="site-footer">© 2025 — Inst·alacant</footer>
 
-<!-- 🔗 ENLACE A LOS SERVICES -->
 <script type="module">
   import { isLogged, currentUser } from '../js/services/auth.service.js';
   import { crearPublicacion, listarPublicaciones, eliminarPublicacion } from '../js/services/publicaciones.service.js';
 
   const $ = s => document.querySelector(s);
   const list = $('#feedList');
-  const base = 'http://127.0.0.1:8090';
+  const BASE = 'http://127.0.0.1:8090';
 
-  const fileUrl = (item, filename) =>
-    `${base}/api/files/${item.collectionId}/${item.id}/${filename}`;
+  const fileUrl = (item, filename) => `${BASE}/api/files/${item.collectionId}/${item.id}/${filename}`;
+  const userAvatarUrl = (u) => `${BASE}/api/files/_pb_users_auth_/${u.id}/${u.avatar}`;
 
-  // Estado sesión
-  const who = $('#whoami');
-  if (who) who.textContent = isLogged() ? (currentUser()?.email || '—') : 'Invitado';
+  // sesión
+  $('#whoami').textContent = isLogged() ? (currentUser()?.email || '—') : 'Invitado';
 
-  // Pintar feed
-  async function render(page = 1) {
-    const res = await listarPublicaciones({ page, perPage: 10, sort: '-created' });
-    list.innerHTML = res.items.map(p => {
-      const imgs = (p.imagenes || []).map(name =>
-        `<img class="post-card__image" src="${fileUrl(p, name)}" alt="" />`
-      ).join('');
-      return `
-        <article data-component="PostCard" class="post-card">
-          <header class="post-card__header">
-            <div>
-              <div class="post-card__user">${p.usuario ?? 'Usuario'}</div>
-              <div class="post-card__meta">${new Date(p.created).toLocaleString()}</div>
-            </div>
-          </header>
-          ${imgs}
-          <div class="post-card__body"><p>${p.contenido ?? ''}</p></div>
-          <div class="post-card__actions">
-            ${isLogged() ? `<button class="button--ghost del" data-id="${p.id}">🗑️ Eliminar</button>` : ``}
-          </div>
-        </article>`;
-    }).join('');
-
-    // Bind eliminar
-    list.querySelectorAll('.del').forEach(b => {
-      b.addEventListener('click', async (e) => {
-        await eliminarPublicacion(e.target.dataset.id);
-        render();
-      });
+  // preview
+  const fileInput = $('#composeFile');
+  $('#addPhotosBtn').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const preview = $('#preview'); preview.innerHTML = '';
+    Array.from(fileInput.files || []).forEach(f => {
+      const url = URL.createObjectURL(f);
+      const img = document.createElement('img');
+      img.src = url; img.loading = 'lazy';
+      img.style.maxWidth = '120px'; img.style.borderRadius = '8px';
+      preview.appendChild(img);
     });
+  });
+
+  // listar
+  async function render(page=1) {
+    try {
+      const res = await listarPublicaciones({ page, perPage: 10, sort: '-created' });
+      list.innerHTML = res.items.map(p => {
+        const imgs = (p.imagenes || []).map(name =>
+          `<img class="post-card__image" src="${fileUrl(p, name)}" alt="">`
+        ).join('');
+        const autor = p.expand?.id_usuario;
+        const avatar = autor?.avatar ? userAvatarUrl(autor) : 'img/avatar-1.png';
+        const nombre = autor?.username || autor?.email || 'Usuario';
+        return `
+          <article class="post-card">
+            <header class="post-card__header">
+              <img class="post-card__avatar" src="${avatar}" alt="Avatar">
+              <div>
+                <div class="post-card__user">${nombre}</div>
+                <div class="post-card__meta">${new Date(p.created).toLocaleString()}</div>
+              </div>
+            </header>
+            ${imgs}
+            <div class="post-card__body"><p>${p.comentario ?? ''}</p></div>
+            <div class="post-card__actions">
+              ${isLogged() ? `<button class="button--ghost del" data-id="${p.id}">🗑️ Eliminar</button>` : ``}
+            </div>
+          </article>`;
+      }).join('');
+
+      list.querySelectorAll('.del').forEach(b => {
+        b.addEventListener('click', async (e) => {
+          await eliminarPublicacion(e.target.dataset.id);
+          render();
+        });
+      });
+    } catch (err) {
+      console.error(err);
+      $('#feedErr').textContent = 'Error al cargar el feed.';
+      $('#feedErr').style.display = 'block';
+    }
   }
 
-  // Publicar
-  $('#publishBtn')?.addEventListener('click', async () => {
+  // publicar
+  $('#publishBtn').addEventListener('click', async () => {
     if (!isLogged()) return alert('Inicia sesión');
-    const contenido = $('#composeInput').value.trim();
-    const files = Array.from($('#composeFile')?.files || []);
-    if (!contenido && files.length === 0) return;
+    const comentario = $('#composeInput').value.trim();
+    const archivos = Array.from(fileInput.files || []);
+    if (!comentario && archivos.length === 0) return;
 
-    await crearPublicacion({ contenido, archivos: files });
-    $('#composeInput').value = '';
-    if ($('#composeFile')) $('#composeFile').value = '';
-    render();
+    $('#publishBtn').disabled = true;
+    try {
+      await crearPublicacion({ comentario, archivos });
+      $('#composeInput').value = '';
+      fileInput.value = ''; $('#preview').innerHTML = '';
+      render();
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo publicar.');
+    } finally {
+      $('#publishBtn').disabled = false;
+    }
   });
 
   render();
