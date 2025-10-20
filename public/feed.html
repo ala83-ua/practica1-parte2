@@ -24,11 +24,9 @@
   <section class="card">
     <h1 class="mt-0">Inicio</h1>
     <div class="toolbar mt-2">
-      <!-- Campo de texto: mapea al campo "comentario" -->
       <input id="composeInput" class="input" type="text" placeholder="¿Qué estás pensando?" aria-label="Componer publicación" />
-      <!-- Fotos múltiples -->
       <input id="composeFile" type="file" accept="image/*" multiple style="display:none">
-      <button id="addPhotosBtn" class="button--ghost" type="button">📷 Añadir fotos</button>
+      <button id="addPhotosBtn" class="button--ghost" type="button"> Añadir fotos</button>
       <button id="publishBtn" class="button">Publicar</button>
     </div>
     <div id="preview" class="mt-2" style="display:flex;gap:.5rem;flex-wrap:wrap"></div>
@@ -48,15 +46,21 @@
 
   const $ = s => document.querySelector(s);
   const list = $('#feedList');
+  const input = $('#composeInput');
   const BASE = 'http://127.0.0.1:8090';
 
   const fileUrl = (item, filename) => `${BASE}/api/files/${item.collectionId}/${item.id}/${filename}`;
   const userAvatarUrl = (u) => `${BASE}/api/files/_pb_users_auth_/${u.id}/${u.avatar}`;
 
-  // sesión
-  $('#whoami').textContent = isLogged() ? (currentUser()?.email || '—') : 'Invitado';
+  // Sesión + placeholder personalizado
+  const u = currentUser();
+  $('#whoami').textContent = isLogged() ? (u?.email || '—') : 'Invitado';
+  if (isLogged() && input) {
+    const nombre = u?.username || u?.email?.split('@')[0] || 'usuario';
+    input.placeholder = `¿Qué estás pensando, ${nombre}?`;
+  }
 
-  // preview
+  // Preview imágenes
   const fileInput = $('#composeFile');
   $('#addPhotosBtn').addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', () => {
@@ -70,7 +74,6 @@
     });
   });
 
-  // listar
   async function render(page=1) {
     try {
       const res = await listarPublicaciones({ page, perPage: 10, sort: '-created' });
@@ -111,7 +114,7 @@
     }
   }
 
-  // publicar
+  // Publicar
   $('#publishBtn').addEventListener('click', async () => {
     if (!isLogged()) return alert('Inicia sesión');
     const comentario = $('#composeInput').value.trim();
@@ -122,7 +125,8 @@
     try {
       await crearPublicacion({ comentario, archivos });
       $('#composeInput').value = '';
-      fileInput.value = ''; $('#preview').innerHTML = '';
+      fileInput.value = '';
+      $('#preview').innerHTML = '';
       render();
     } catch (err) {
       console.error(err);

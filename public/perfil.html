@@ -31,29 +31,31 @@
     <p class="muted">ID: <span id="idOut"></span></p>
     <p id="perfilErr" style="color:#c00;display:none"></p>
   </section>
+
+  <!-- Mis publicaciones -->
+  <section class="post-list mt-4" id="myPosts"></section>
 </main>
 
 <footer class="site-footer">© 2025 — Inst·alacant</footer>
 
 <script type="module">
   import { currentUser, isLogged } from '../js/services/auth.service.js';
+  import { listarPublicaciones, eliminarPublicacion } from '../js/services/publicaciones.service.js';
   import { actualizarUsuarioActual } from '../js/services/users.service.js';
 
   const BASE = 'http://127.0.0.1:8090';
   const $ = s => document.querySelector(s);
   const u = currentUser();
 
-  // Datos
+  // Datos básicos
   $('#emailOut').textContent = u?.email ?? 'Invitado';
   $('#idOut').textContent = u?.id ?? '-';
 
-  // Avatar actual o placeholder
+  // Avatar actual o placeholder (si añadiste campo "avatar" en users)
   const avatarEl = $('#avatarImg');
-  if (isLogged() && u?.avatar) {
-    avatarEl.src = `${BASE}/api/files/_pb_users_auth_/${u.id}/${u.avatar}`;
-  } else {
-    avatarEl.src = 'img/avatar-1.png';
-  }
+  avatarEl.src = (isLogged() && u?.avatar)
+    ? `${BASE}/api/files/_pb_users_auth_/${u.id}/${u.avatar}`
+    : 'img/avatar-1.png';
 
   // Cambiar avatar
   $('#avatarBtn').addEventListener('click', () => $('#avatarInput').click());
@@ -62,7 +64,6 @@
     if (!file) return;
     try {
       await actualizarUsuarioActual({ avatarFile: file });
-      // refresco (cache-busting)
       avatarEl.src = `${BASE}/api/files/_pb_users_auth_/${u.id}/${file.name}?v=${Date.now()}`;
       alert('Avatar actualizado');
     } catch (e) {
@@ -71,6 +72,45 @@
       $('#perfilErr').style.display = 'block';
     }
   });
+
+  // Mis publicaciones (solo las mías)
+  const cont = $('#myPosts');
+  const fileUrl = (item, filename) => `${BASE}/api/files/${item.collectionId}/${item.id}/${filename}`;
+
+  async function renderMine(page = 1) {
+    const res = await listarPublicaciones({
+      page, perPage: 10, sort: '-created',
+      filter: `id_usuario = "${u.id}"`
+    });
+    cont.innerHTML = res.items.map(p => {
+      const imgs = (p.imagenes || []).map(name =>
+        `<img class="post-card__image" src="${fileUrl(p, name)}" alt="">`
+      ).join('');
+      return `
+        <article class="post-card">
+          <header class="post-card__header">
+            <div>
+              <div class="post-card__user">Yo</div>
+              <div class="post-card__meta">${new Date(p.created).toLocaleString()}</div>
+            </div>
+          </header>
+          ${imgs}
+          <div class="post-card__body"><p>${p.comentario ?? ''}</p></div>
+          <div class="post-card__actions">
+            <button class="button--ghost del" data-id="${p.id}">🗑️ Eliminar</button>
+          </div>
+        </article>`;
+    }).join('');
+
+    cont.querySelectorAll('.del').forEach(b => {
+      b.addEventListener('click', async (e) => {
+        await eliminarPublicacion(e.target.dataset.id);
+        renderMine();
+      });
+    });
+  }
+
+  if (isLogged()) renderMine();
 </script>
 </body>
 </html>

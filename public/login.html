@@ -57,7 +57,7 @@
 
     <div class="card">
       <h2>Info</h2>
-      <p class="muted">Esta página usa tu backend PocketBase con el API JS.</p>
+      <p class="muted">Aquí se mostrará más información</p>
     </div>
   </section>
 </main>
@@ -66,48 +66,44 @@
 
 <script type="module">
   import { login, register, currentUser, isLogged } from '../js/services/auth.service.js';
-  const $ = s => document.querySelector(s);
 
-  // estado sesión
+  const $ = s => document.querySelector(s);
   const who = $('#whoami');
   who.textContent = isLogged() ? (currentUser()?.email || '—') : 'Invitado';
 
-  // login
+  // LOGIN
   $('#formLogin').addEventListener('submit', async (e) => {
     e.preventDefault();
-    $('#loginErr').style.display = 'none';
+    const errBox = $('#loginErr'); errBox.style.display = 'none'; errBox.textContent = '';
     try {
-      await login($('#email').value, $('#password').value);
+      await login($('#email').value.trim(), $('#password').value);
       window.location.href = './feed.html';
-    } catch (err) {
-      console.error(err);
-      $('#loginErr').textContent = 'No se pudo iniciar sesión. Revisa email/contraseña.';
-      $('#loginErr').style.display = 'block';
+    } catch (e) {
+      console.error('LOGIN ERROR', e);
+      errBox.textContent = e.message || 'No se pudo iniciar sesión.';
+      errBox.style.display = 'block';
     }
   });
 
-  // registro
+  // REGISTRO
   $('#formReg').addEventListener('submit', async (e) => {
     e.preventDefault();
-    $('#regErr').style.display = 'none';
-    $('#regOk').style.display = 'none';
+    const err = $('#regErr'), ok = $('#regOk');
+    err.style.display = 'none'; err.textContent = ''; ok.style.display = 'none';
     try {
-      if ($('#pwdReg').value !== $('#pwd2Reg').value) {
-        $('#regErr').textContent = 'Las contraseñas no coinciden.';
-        $('#regErr').style.display = 'block';
-        return;
+      const email = $('#emailReg').value.trim();
+      const username = $('#userReg').value.trim();
+      const pwd = $('#pwdReg').value;
+      const pwd2 = $('#pwd2Reg').value;
+      if (pwd !== pwd2) {
+        err.textContent = 'Las contraseñas no coinciden.'; err.style.display = 'block'; return;
       }
-      await register({
-        email: $('#emailReg').value,
-        username: $('#userReg').value,
-        password: $('#pwdReg').value,
-        passwordConfirm: $('#pwd2Reg').value
-      });
-      $('#regOk').style.display = 'block';
-    } catch (err) {
-      console.error(err);
-      $('#regErr').textContent = 'No se pudo registrar (¿email ya en uso?).';
-      $('#regErr').style.display = 'block';
+      await register({ email, password: pwd, passwordConfirm: pwd2, username });
+      ok.style.display = 'block';
+    } catch (e) {
+      console.error('REGISTER ERROR', e);
+      err.textContent = e.message || 'No se pudo registrar.';
+      err.style.display = 'block';
     }
   });
 </script>
