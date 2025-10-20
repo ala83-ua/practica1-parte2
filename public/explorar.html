@@ -83,7 +83,7 @@
     // Categoría -> se interpreta como un hashtag más (si viene)
     const catTag = category?.trim();
     if (catTag) {
-      filters.push(`comentario ~ "${catTag}"`);
+      filters.push(`Comentario ~ "${catTag}"`);
     }
 
     const query = q.trim();
@@ -94,14 +94,13 @@
         filters.push(`id_usuario.username ~ "${term}" || id_usuario.email ~ "${term}"`);
       } else if (query.includes('#')) {
         // Buscar por hashtags: OR entre todos los hashtags detectados
-        const #_dummy = 0; // evita minificación / hint para editores
         const tags = extractHashtags(query);
         if (tags.length) {
-          filters.push(tags.map(t => `comentario ~ "${t}"`).join(' || '));
+          filters.push(tags.map(t => `Comentario ~ "${t}"`).join(' || '));
         }
       } else {
-        // Texto libre: comentario o ubicación contienen el término
-        filters.push(`comentario ~ "${query}" || ubicacion ~ "${query}"`);
+        // Texto libre: Comentario o Ubicacion contienen el término
+        filters.push(`Comentario ~ "${query}" || Ubicacion ~ "${query}"`);
       }
     }
 
@@ -110,15 +109,15 @@
   }
 
   function cardFromItem(p) {
-    const imgs = (p.imagenes || []).map(name =>
+    const imgs = (p.Imagen || []).map(name =>
       `<img class="post-card__image" src="${fileUrl(p, name)}" alt="">`
     ).join('');
 
     const autor = p.expand?.id_usuario;
-    const avatar = autor?.avatar ? userAvatarUrl(autor) : 'img/avatar-1.png';
+    const avatar = autor?.avatar ? userAvatarUrl(autor) : 'img/avatar.png';
     const nombre = autor?.username || autor?.email || 'Usuario';
 
-    const tags = extractHashtags(p.comentario)
+    const tags = extractHashtags(p.Comentario)
       .map(t => `<span class="muted" style="margin-right:.25rem">${t}</span>`).join('');
 
     return `
@@ -132,7 +131,7 @@
         </header>
         ${imgs}
         <div class="post-card__body">
-          <p>${p.comentario ?? ''}</p>
+          <p>${p.Comentario ?? ''}</p>
         </div>
         <div class="post-card__actions">
           <button class="button--ghost" title="Me gusta" aria-label="Me gusta">❤️</button>

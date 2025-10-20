@@ -54,9 +54,9 @@
   const userAvatarUrl = (u) => `${BASE}/api/files/_pb_users_auth_/${u.id}/${u.avatar}`;
 
   // Helpers para tolerar nombres distintos en tu schema
-  const getTexto = (p) => p.comentario ?? p.Comentario ?? p.texto ?? p.content ?? '';
+  const getTexto = (p) => p.Comentario ?? p.comentario ?? p.texto ?? p.content ?? '';
   const getArchivos = (p) => {
-    if (Array.isArray(p.imagenes) && p.imagenes.length) return p.imagenes;
+    if (Array.isArray(p.Imagen) && p.Imagen.length) return p.Imagen;
     if (p.imagen) return [p.imagen];
     return [];
   };
@@ -93,7 +93,7 @@
         ).join('');
 
         const autor = p.expand?.id_usuario; // <— tu relación
-        const avatar = autor?.avatar ? userAvatarUrl(autor) : 'img/avatar-1.png';
+        const avatar = autor?.avatar ? userAvatarUrl(autor) : 'img/avatar.png';
         const nombre = autor?.username || autor?.email || 'Usuario';
         const texto = getTexto(p);
 

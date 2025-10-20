@@ -47,29 +47,55 @@
   const $ = s => document.querySelector(s);
   const u = currentUser();
 
+  // Verificar si está logueado
+  if (!isLogged()) {
+    window.location.href = 'login.html';
+  }
+
   // Datos básicos
   $('#emailOut').textContent = u?.email ?? 'Invitado';
   $('#idOut').textContent = u?.id ?? '-';
 
-  // Avatar actual o placeholder (si añadiste campo "avatar" en users)
+  // Avatar actual o placeholder
   const avatarEl = $('#avatarImg');
-  avatarEl.src = (isLogged() && u?.avatar)
-    ? `${BASE}/api/files/_pb_users_auth_/${u.id}/${u.avatar}`
-    : 'img/avatar-1.png';
+  const updateAvatarDisplay = () => {
+    const user = currentUser();
+    avatarEl.src = (user?.avatar)
+      ? `${BASE}/api/files/_pb_users_auth_/${user.id}/${user.avatar}?v=${Date.now()}`
+      : 'img/avatar.png';
+  };
+  updateAvatarDisplay();
 
   // Cambiar avatar
   $('#avatarBtn').addEventListener('click', () => $('#avatarInput').click());
   $('#avatarInput').addEventListener('change', async () => {
     const file = $('#avatarInput').files?.[0];
     if (!file) return;
+    
+    const btn = $('#avatarBtn');
+    const errBox = $('#perfilErr');
+    btn.disabled = true;
+    btn.textContent = 'Subiendo...';
+    errBox.style.display = 'none';
+    
     try {
       await actualizarUsuarioActual({ avatarFile: file });
-      avatarEl.src = `${BASE}/api/files/_pb_users_auth_/${u.id}/${file.name}?v=${Date.now()}`;
-      alert('Avatar actualizado');
+      updateAvatarDisplay();
+      $('#avatarInput').value = ''; // Limpiar input
+      
+      // Mensaje de éxito temporal
+      errBox.style.color = '#0a0';
+      errBox.textContent = '✓ Avatar actualizado correctamente';
+      errBox.style.display = 'block';
+      setTimeout(() => { errBox.style.display = 'none'; }, 3000);
     } catch (e) {
       console.error(e);
-      $('#perfilErr').textContent = 'No se pudo actualizar el avatar.';
-      $('#perfilErr').style.display = 'block';
+      errBox.style.color = '#c00';
+      errBox.textContent = 'No se pudo actualizar el avatar: ' + (e.message || 'Error desconocido');
+      errBox.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Cambiar avatar';
     }
   });
 
@@ -78,36 +104,63 @@
   const fileUrl = (item, filename) => `${BASE}/api/files/${item.collectionId}/${item.id}/${filename}`;
 
   async function renderMine(page = 1) {
-    const res = await listarPublicaciones({
-      page, perPage: 10, sort: '-created',
-      filter: `id_usuario = "${u.id}"`
-    });
-    cont.innerHTML = res.items.map(p => {
-      const imgs = (p.imagenes || []).map(name =>
-        `<img class="post-card__image" src="${fileUrl(p, name)}" alt="">`
-      ).join('');
-      return `
-        <article class="post-card">
-          <header class="post-card__header">
-            <div>
-              <div class="post-card__user">Yo</div>
-              <div class="post-card__meta">${new Date(p.created).toLocaleString()}</div>
-            </div>
-          </header>
-          ${imgs}
-          <div class="post-card__body"><p>${p.comentario ?? ''}</p></div>
-          <div class="post-card__actions">
-            <button class="button--ghost del" data-id="${p.id}">🗑️ Eliminar</button>
-          </div>
-        </article>`;
-    }).join('');
-
-    cont.querySelectorAll('.del').forEach(b => {
-      b.addEventListener('click', async (e) => {
-        await eliminarPublicacion(e.target.dataset.id);
-        renderMine();
+    try {
+      const res = await listarPublicaciones({
+        page, perPage: 10, sort: '-created',
+        filter: `id_usuario = "${u.id}"`
       });
-    });
+      
+      if (res.items.length === 0 && page === 1) {
+        cont.innerHTML = `
+          <div class="card" style="text-align:center;padding:2rem;">
+            <p class="muted">Aún no has publicado nada.</p>
+            <p class="muted mt-1">Ve a <a href="feed.html">Inicio</a> para crear tu primera publicación.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      cont.innerHTML = res.items.map(p => {
+        const imgs = (p.Imagen || []).map(name =>
+          `<img class="post-card__image" src="${fileUrl(p, name)}" alt="">`
+        ).join('');
+        return `
+          <article class="post-card">
+            <header class="post-card__header">
+              <div>
+                <div class="post-card__user">Yo</div>
+                <div class="post-card__meta">${new Date(p.created).toLocaleString()}</div>
+              </div>
+            </header>
+            ${imgs}
+            <div class="post-card__body"><p>${p.Comentario ?? ''}</p></div>
+            <div class="post-card__actions">
+              <button class="button--ghost del" data-id="${p.id}">🗑️ Eliminar</button>
+            </div>
+          </article>`;
+      }).join('');
+
+      cont.querySelectorAll('.del').forEach(b => {
+        b.addEventListener('click', async (e) => {
+          if (confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
+            try {
+              await eliminarPublicacion(e.target.dataset.id);
+              renderMine();
+            } catch (err) {
+              console.error(err);
+              alert('No se pudo eliminar la publicación');
+            }
+          }
+        });
+      });
+    } catch (err) {
+      console.error(err);
+      cont.innerHTML = `
+        <div class="card" style="text-align:center;padding:2rem;color:#c00;">
+          <p>Error al cargar las publicaciones.</p>
+        </div>
+      `;
+    }
   }
 
   if (isLogged()) renderMine();
