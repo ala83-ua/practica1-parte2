@@ -14,7 +14,7 @@
       <a href="feed.html">Inicio</a>
       <a href="explorar.html">Explorar</a>
       <a href="perfil.html" aria-current="page">Perfil</a>
-      <a href="login.html">Entrar</a>
+      <a href="login.html" id="authLink">Entrar</a>
     </nav>
   </div>
 </header>
@@ -39,7 +39,7 @@
 <footer class="site-footer">© 2025 — Inst·alacant</footer>
 
 <script type="module">
-  import { currentUser, isLogged } from '../js/services/auth.service.js';
+  import { currentUser, isLogged, logout } from '../js/services/auth.service.js';
   import { listarPublicaciones, eliminarPublicacion } from '../js/services/publicaciones.service.js';
   import { actualizarUsuarioActual } from '../js/services/users.service.js';
 
@@ -51,6 +51,18 @@
   if (!isLogged()) {
     window.location.href = 'login.html';
   }
+
+  // Botón de cerrar sesión
+  const authLink = $('#authLink');
+  authLink.textContent = 'Cerrar sesión';
+  authLink.href = '#';
+  authLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (confirm('¿Seguro que quieres cerrar sesión?')) {
+      logout();
+      window.location.href = 'login.html';
+    }
+  });
 
   // Datos básicos
   $('#emailOut').textContent = u?.email ?? 'Invitado';

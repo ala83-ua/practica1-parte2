@@ -14,7 +14,7 @@
       <a href="feed.html" aria-current="page">Inicio</a>
       <a href="explorar.html">Explorar</a>
       <a href="perfil.html">Perfil</a>
-      <a href="login.html">Entrar</a>
+      <a href="login.html" id="authLink">Entrar</a>
     </nav>
   </div>
 </header>
@@ -67,6 +67,22 @@
   if (isLogged() && input) {
     const nombre = u?.username || (u?.email ? u.email.split('@')[0] : 'usuario');
     input.placeholder = `¿Qué estás pensando, ${nombre}?`;
+  }
+
+  // Botón de autenticación dinámico
+  const authLink = $('#authLink');
+  if (isLogged()) {
+    authLink.textContent = 'Cerrar sesión';
+    authLink.href = '#';
+    authLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (confirm('¿Seguro que quieres cerrar sesión?')) {
+        import('./js/services/auth.service.js').then(({ logout }) => {
+          logout();
+          window.location.href = 'login.html';
+        });
+      }
+    });
   }
 
   // Preview imágenes

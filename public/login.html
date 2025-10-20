@@ -14,7 +14,7 @@
       <a href="feed.html">Inicio</a>
       <a href="explorar.html">Explorar</a>
       <a href="perfil.html">Perfil</a>
-      <a href="login.html" aria-current="page">Entrar</a>
+      <a href="login.html" aria-current="page" id="authLink">Entrar</a>
     </nav>
   </div>
 </header>
@@ -65,11 +65,30 @@
 <footer class="site-footer">© 2025 — Inst·alacant</footer>
 
 <script type="module">
-  import { login, register, currentUser, isLogged } from '../js/services/auth.service.js';
+  import { login, register, currentUser, isLogged, logout } from '../js/services/auth.service.js';
 
   const $ = s => document.querySelector(s);
   const who = $('#whoami');
   who.textContent = isLogged() ? (currentUser()?.email || '—') : 'Invitado';
+
+  // Si ya está logueado, redirigir al feed
+  if (isLogged()) {
+    window.location.href = 'feed.html';
+  }
+
+  // Botón de autenticación (aunque en login siempre debería ser "Entrar")
+  const authLink = $('#authLink');
+  if (isLogged()) {
+    authLink.textContent = 'Cerrar sesión';
+    authLink.href = '#';
+    authLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (confirm('¿Seguro que quieres cerrar sesión?')) {
+        logout();
+        window.location.reload();
+      }
+    });
+  }
 
   // LOGIN
   $('#formLogin').addEventListener('submit', async (e) => {

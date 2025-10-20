@@ -14,7 +14,7 @@
       <a href="feed.html" data-nav>Inicio</a>
       <a href="explorar.html" data-nav aria-current="page">Explorar</a>
       <a href="perfil.html" data-nav>Perfil</a>
-      <a href="login.html" data-nav>Entrar</a>
+      <a href="login.html" data-nav id="authLink">Entrar</a>
     </nav>
   </div>
 </header>
@@ -50,6 +50,7 @@
 
 <script type="module">
   import { listarPublicaciones } from '../js/services/publicaciones.service.js';
+  import { isLogged, logout } from '../js/services/auth.service.js';
 
   const $ = s => document.querySelector(s);
   const grid = $('#grid');
@@ -58,6 +59,20 @@
   const BASE = 'http://127.0.0.1:8090';
   const fileUrl = (item, filename) => `${BASE}/api/files/${item.collectionId}/${item.id}/${filename}`;
   const userAvatarUrl = (u) => `${BASE}/api/files/_pb_users_auth_/${u.id}/${u.avatar}`;
+
+  // Botón de autenticación dinámico
+  const authLink = $('#authLink');
+  if (isLogged()) {
+    authLink.textContent = 'Cerrar sesión';
+    authLink.href = '#';
+    authLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (confirm('¿Seguro que quieres cerrar sesión?')) {
+        logout();
+        window.location.href = 'login.html';
+      }
+    });
+  }
 
   // Estado de búsqueda/paginación
   let state = {
